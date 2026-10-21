@@ -42,7 +42,7 @@
 //    - 한계: 형태소 분석기가 없어서 '요청하면' '찾고' 같은 활용형은 남는다.
 
 window.RULES = {
-  version: "0.3 (키워드 잡음 규칙 · 동점 규칙 · 2026-10-18)",
+  version: "1.0 (거버넌스·공공 AI 복합 조건 · 분류 근거 · 2026-10-21)",
 
   // ── W2 · 주제 분류 사전 ────────────────────────────────────────────
   // 주제 이름 → { en, ko, exclude }. 적힌 순서 = 화면 표시 순서 (app.js가 Object.keys로 읽음). 경계는 기획안 v3 「주제 5개」 표를 따른다.
@@ -55,14 +55,48 @@ window.RULES = {
       exclude: ["travel agent", "real estate agent", "secret agent", "free agent", "fbi agent", "insurance agent"]
     },
     "AI 거버넌스·공공 AI": {
-      // 편향·안전성·정렬, 법·규제, 정부·국제기구 가이드라인. 교육 현장의 윤리 교육은 리터러시·교육으로.
+      // (v1.0 · 중간과제) 범위 = ⓐ AI의 규율·정책(법·규제·통상·외교·표준·책임) + ⓑ 정부·공공기관의 AI 도입·운영·예산
+      //   + ⓒ 기존의 AI 윤리·안전(편향·안전성·정렬 등). '거버넌스'를 윤리·안전의 규율까지 포함하는 넓은 뜻으로 쓴다.
+      //   공공 AI 도입을 넣은 이유: 과학기술정책 연구도구로서 정부가 AI를 어떻게 쓰는지도 정책 동향이기 때문 (사용자 결정 1).
+      //   교육 현장의 윤리 교육은 리터러시·교육으로.
+      // v0.3 대비: ko '안전'을 단독 목록에서 빼 아래 복합 조건 'AI × 안전'으로 옮김 — '행정안전부'·'안전관리'처럼 AI와 무관한 제목에
+      //   '안전'이 들어 있어도 걸리던 문제(반례: "행정안전부, 지자체 도로 정비 예산" → v0.3에서 이 주제로 분류됨).
       en: ["ai safety", "safety", "ethics", "ethical", "bias", "biased", "alignment", "deepfake", "deepfakes",
            "misinformation", "disinformation", "guardrail", "guardrails", "regulation", "regulations",
            "regulator", "regulators", "regulatory", "ai act", "governance", "lawsuit", "copyright",
-           "privacy", "executive order", "accountability", "transparency", "white house", "lawmakers", "watermark", "watermarking", "oversight"],
-      ko: ["윤리", "안전", "편향", "딥페이크", "허위정보", "가짜뉴스", "규제", "기본법", "법안", "입법",
-           "거버넌스", "가이드라인", "저작권", "개인정보", "책임성", "투명성", "워터마크", "고영향", "소송"],
-      exclude: []
+           "privacy", "executive order", "accountability", "transparency", "white house", "lawmakers", "watermark", "watermarking", "oversight",
+           "export control", "export controls"],   // (v1.0) 구 자체가 구체적이라 단독으로 둠
+      ko: ["윤리", "편향", "딥페이크", "허위정보", "가짜뉴스", "규제", "기본법", "법안", "입법",
+           "거버넌스", "가이드라인", "저작권", "개인정보", "책임성", "투명성", "워터마크", "고영향", "소송",
+           "수출 통제", "수출통제"],              // (v1.0) 예: "미 국방차관 'AI 기업 협조 안 하면 수출 통제 직접 가할 것'"
+      // (v1.0) 'AI'가 조류인플루엔자의 약자로 쓰인 제목은 이 주제에서 뺀다 (반례: "정부, 조류인플루엔자(AI) 방역 예산 증액")
+      exclude: ["조류인플루엔자", "조류 인플루엔자", "avian influenza", "bird flu"],
+      // (v1.0) 복합 조건: 아래 일반 낱말은 혼자서는 너무 넓어 AI 낱말과 함께 있을 때만 이 주제로 본다 (적용 방식 1절)
+      combos: [
+        { name: "AI × 공공·정부",          // ⓑ 공공 AI 도입·예산, 정부가 주체인 AI 정책
+          // 예: "목포, 행정업무에 생성 AI 도입" · "대전시 전 부서가 발굴한 AI 혁신과제, 본예산에 편성" · "정책평가연구원, '공공기관 경영평가' AI 분석"
+          // 반례: "카카오, 공공 와이파이 지도에 AI 추천" → 수식어 '공공'은 넣지 않고 '공공기관'·'공공AI'처럼 주체가 드러나는 말만 넣음
+          all: [
+            { en: ["ai", "artificial intelligence", "llm", "llms", "chatbot", "chatbots"], ko: ["인공지능", "생성형", "챗봇"] },
+            { en: ["government", "public sector", "ministry"],
+              ko: ["정부", "공공기관", "공공부문", "공공서비스", "공공 ai", "공공ai", "행정", "지자체", "공무원", "예산",
+                   "국가", "국회", "의회", "의원", "부처", "장관", "대통령", "시청", "도청", "군청", "구청"] }
+          ] },
+        { name: "AI × 규율·외교",          // ⓐ 정부 간 협의·국제 규율·심의·제재·표준
+          // 예: "[게시판] 제2차 한일 AI 실무협의 개최"
+          // 반례: "전 세계 기업 55% 'AI 비용 통제 어려워'" → '통제' 단독은 넣지 않고 '수출 통제'만 위 ko에 둠
+          all: [
+            { en: ["ai", "artificial intelligence"], ko: ["인공지능"] },
+            { en: ["sanction", "sanctions", "treaty", "un"],
+              ko: ["협의", "협정", "심의", "제재", "표준", "유엔", "국제기구"] }
+          ] },
+        { name: "AI × 안전",               // ⓒ v0.3의 ko '안전'을 AI와 함께 있을 때로 좁힘
+          // 예: "AI안전연구소 김명주 소장 '…안전·신뢰 확보에 달렸다'"
+          all: [
+            { en: ["ai", "artificial intelligence"], ko: ["인공지능"] },
+            { ko: ["안전"] }
+          ] }
+      ]
     },
     "AI 리터러시·교육": {
       // AI 활용 교육, 교사·학생의 AI 사용, 리터러시 측정. 'learning'은 머신러닝과 겹쳐서 넣지 않음.
