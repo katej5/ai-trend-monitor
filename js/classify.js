@@ -16,14 +16,30 @@ window.ATM = window.ATM || {};
     return new RegExp("(^|[^a-z0-9.])" + esc(ATM.normalize(w)) + "($|[^a-z])").test(t);
   }
 
-  function topicsOf(title, rules) {
-    var t = ATM.normalize(title);
-    return Object.keys(rules.topics).filter(function (name) {
+  // { en, ko } 목록에서 제목 t에 걸린 낱말 (적힌 모양 그대로)
+  function hitsOf(t, spec) {
+    return (spec.en || []).filter(function (w) { return enHit(t, w); })
+      .concat((spec.ko || []).filter(function (w) { return t.indexOf(ATM.normalize(w)) >= 0; }));
+  }
+
+  // 주제 이름 → 걸린 근거 [{ rule, words }] (rules.js 「적용 방식」 1절)
+  // - rule "낱말": en·ko 목록에서 걸린 낱말
+  // - rule = 복합 조건 이름: combos의 all 묶음마다 하나 이상 걸렸을 때, 묶음별로 걸린 낱말
+  // 근거가 하나도 없거나 exclude에 걸린 주제는 빠진다. 키 순서 = RULES.topics 순서
+  function topicMatches(title, rules) {
+    var t = ATM.normalize(title), out = {};
+    Object.keys(rules.topics).forEach(function (name) {
       var p = rules.topics[name];
-      if (p.exclude.some(function (x) { return t.indexOf(ATM.normalize(x)) >= 0; })) return false;
-      return p.en.some(function (w) { return enHit(t, w); }) ||
-             p.ko.some(function (w) { return t.indexOf(ATM.normalize(w)) >= 0; });
+      if (p.exclude.some(function (x) { return t.indexOf(ATM.normalize(x)) >= 0; })) return;
+      var why = [], single = hitsOf(t, p);
+      if (single.length) why.push({ rule: "낱말", words: single });
+      (p.combos || []).forEach(function (c) {
+        var parts = c.all.map(function (g) { return hitsOf(t, g); });
+        if (parts.every(function (h) { return h.length > 0; })) why.push({ rule: c.name, words: [].concat.apply([], parts) });
+      });
+      if (why.length) out[name] = why;
     });
+    return out;
   }
 
   // 등급표에서 가장 긴 domain, 그다음 pathPrefix가 있는 줄. 없으면 null
@@ -44,10 +60,11 @@ window.ATM = window.ATM || {};
     return Math.round((Date.parse(b + "T00:00:00Z") - Date.parse(a + "T00:00:00Z")) / 86400000);
   }
 
-  // rows, RULES → [{ line, date, title, url, source, grade, gradeReason, gradeType, oa, unregistered, topics, keywords, similar, score }]
+  // rows, RULES → [{ line, date, title, url, source, grade, gradeReason, gradeType, oa, unregistered, topics, why, keywords, similar, score }]
   ATM.classify = function (rows, rules) {
     var items = rows.map(function (r) {
       var src = sourceOf(r.url, rules);
+      var why = topicMatches(r.title, rules);
       return {
         line: r.line, date: r.date, title: r.title, url: r.url, source: r.source,
         grade: src ? src.grade : rules.unknownGrade,
@@ -55,7 +72,8 @@ window.ATM = window.ATM || {};
         gradeType: src ? src.type : "미등록",
         oa: src ? src.oa : null,
         unregistered: !src,
-        topics: topicsOf(r.title, rules),
+        topics: Object.keys(why),
+        why: why,
         keywords: ATM.extractKeywords(r.title, rules)
       };
     });

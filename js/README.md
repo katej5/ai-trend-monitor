@@ -18,7 +18,7 @@
 | 함수 | 파일 | 입력 | 출력 |
 |---|---|---|---|
 | `ATM.parseCSV(text)` | `js/import.js` | CSV 문자열 | `{ rows: [{ line, date, title, url, source }], skipped: [{ line, reason }] }`<br>`line`은 원본 줄 번호(머리글 = 1). 빈 줄 · 날짜 없는 줄 · 날짜 형식 오류(`YYYY-MM-DD`가 아니거나 없는 날짜) 줄은 `skipped`로 |
-| `ATM.classify(rows, rules)` | `js/classify.js` | `parseCSV`의 `rows` · `RULES` | `items` 배열(입력 순서 그대로). 한 건 = 기획안의 「A → B로 넘길 결과 한 건」<br>`{ date, title, url, source, grade, gradeReason, topics, keywords, score }`<br>+ W6에서 더한 칸: `line`(CSV 줄 번호) · `gradeType`(출처 유형) · `oa`(원문 무료 여부, 미등록이면 `null`) · `unregistered`(등급표에 없는 도메인이면 `true`) · `similar`(비슷한 기사의 줄 번호 배열)<br>`score`는 반올림 전 값 → 화면에서 소수 둘째 자리로 표시<br>어느 주제에도 안 걸리면 `topics: []` |
+| `ATM.classify(rows, rules)` | `js/classify.js` | `parseCSV`의 `rows` · `RULES` | `items` 배열(입력 순서 그대로). 한 건 = 기획안의 「A → B로 넘길 결과 한 건」<br>`{ date, title, url, source, grade, gradeReason, topics, keywords, score }`<br>+ W6에서 더한 칸: `line`(CSV 줄 번호) · `gradeType`(출처 유형) · `oa`(원문 무료 여부, 미등록이면 `null`) · `unregistered`(등급표에 없는 도메인이면 `true`) · `similar`(비슷한 기사의 줄 번호 배열)<br>+ v1.0(중간과제): `why` = 주제 이름 → 걸린 근거 `[{ rule, words }]` (`rule`은 `"낱말"` 또는 복합 조건 이름, `words`는 실제로 걸린 낱말). `topics`는 `Object.keys(why)`와 같다<br>`score`는 반올림 전 값 → 화면에서 소수 둘째 자리로 표시<br>어느 주제에도 안 걸리면 `topics: []` |
 | `ATM.byImportance(a, b)` | `js/classify.js` | `items`의 두 건 | 중요도 순위 비교 함수: 점수 → 날짜 최신 → 등급 → 줄 번호 (rules.js 동점 규칙). `items.slice().sort(ATM.byImportance)`로 씀. 그리드(W9)는 이걸로 정렬 |
 | `ATM.normalize(s)` | `js/classify.js` | 문자열 | 소문자 + 특수 하이픈을 `-`로. 분류·키워드가 같이 씀 |
 | `ATM.extractKeywords(title, rules)` | `js/keywords.js` | 제목 · `RULES` | `["EU AI Act", "표시 의무"]` 같은 키워드 배열 (한 기사 안에서 중복 없음). `classify`가 불러 씀 · W6에서 먼저 구현 |
@@ -52,7 +52,10 @@ window.RULES = {
     "AI 에이전트": {
       en: ["ai agent", "agentic", "mcp"],      // 낱말 단위로 일치
       ko: ["에이전트", "에이전틱"],            // 제목에 들어 있으면 일치
-      exclude: ["travel agent"]                // 걸리면 이 주제는 안 붙임
+      exclude: ["travel agent"],               // 걸리면 이 주제는 안 붙임
+      combos: [                                // (v1.0 · 선택) 복합 조건: all의 묶음마다 하나 이상 걸려야 일치
+        { name: "AI × 공공·정부", all: [{ en: ["ai"], ko: ["인공지능"] }, { ko: ["정부", "예산"] }] }
+      ]
     },
     // … 5개
   },
