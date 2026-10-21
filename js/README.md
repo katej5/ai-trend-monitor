@@ -22,7 +22,7 @@
 | `ATM.byImportance(a, b)` | `js/classify.js` | `items`의 두 건 | 중요도 순위 비교 함수: 점수 → 날짜 최신 → 등급 → 줄 번호 (rules.js 동점 규칙). `items.slice().sort(ATM.byImportance)`로 씀. 그리드(W9)는 이걸로 정렬 |
 | `ATM.normalize(s)` | `js/classify.js` | 문자열 | 소문자 + 특수 하이픈을 `-`로. 분류·키워드가 같이 씀 |
 | `ATM.extractKeywords(title, rules)` | `js/keywords.js` | 제목 · `RULES` | `["EU AI Act", "표시 의무"]` 같은 키워드 배열 (한 기사 안에서 중복 없음). `classify`가 불러 씀 · W6에서 먼저 구현 |
-| `ATM.keywordRanks(items, baseDate[, rules])` | `js/keywords.js` | `items` · 기준일 `"YYYY-MM-DD"` · (선택) `RULES` — 안 넘기면 전역 `RULES` | `{ "90d": {...}, "30d": {...}, "7d": {...}, "1d": {...} }`<br>각 값 = `{ window: "7d", label: "7일", days: 7, rank: [{ keyword, count, prev }] }` 상위 `rules.keywords.topN`(10)개<br>`count` = 그 기간에 키워드가 들어간 기사 수, `prev` = 바로 앞 같은 길이 기간의 기사 수. 순위는 건수 → 직전 건수 → 글자 코드 순서 |
+| `ATM.keywordRanks(items, baseDate[, rules])` | `js/keywords.js` | `items` · 기준일 `"YYYY-MM-DD"` · (선택) `RULES` — 안 넘기면 전역 `RULES` | `{ "90d": {...}, "30d": {...}, "7d": {...}, "1d": {...} }`<br>각 값 = `{ window: "7d", label: "7일", days: 7, rank: [{ keyword, count, prev }] }` 상위 `rules.keywords.topN`(10)개<br>`count` = 그 기간에 키워드가 들어간 기사 수, `prev` = 바로 앞 같은 길이 기간의 기사 수. 순위는 건수 → 직전 건수 → 글자 코드 순서<br>+ v1.0: `prevDaysCovered` = 직전 기간 안에 자료가 실제로 있는 날 수(자료가 늦게 시작하면 `days`보다 작음 → 표에 '자료 부족' 표시). `1d`의 라벨은 '기준일'(기준일 하루) |
 
 기준일(`baseDate`)은 `app.js`가 `items`의 가장 늦은 날짜로 정해서 넘긴다.
 
@@ -30,13 +30,14 @@
 
 | 함수 | 파일 | 입력 | 하는 일 |
 |---|---|---|---|
-| `ATM.renderSummary(stats)` | `js/charts.js` | `{ total, classified, unclassified, skipped: [{ line, reason }] }` | `#stat-total` 등 숫자 4칸과 `#skipped-lines`(건너뛴 줄 번호) 채우기 |
+| `ATM.renderSummary(stats)` | `js/charts.js` | `{ total, classified, unclassified, skipped: [{ line, reason }] }` + v1.0 `firstDate` · `baseDate` · `rulesVersion` | `#stat-total` 등 숫자 4칸, `#summary-meta`(분류율·미분류율과 분모, 자료 날짜, 기준 버전), `#skipped-lines`(건너뛴 줄 번호) 채우기 |
 | `ATM.renderTopicCounts(el, items, topics, onSelect)` | `js/charts.js` | `#topic-counts .slot` · `items` · 주제 이름 배열 · 막대를 눌렀을 때 부를 함수 `onSelect(topic)` | 가로 막대 5개 + 미분류 |
-| `ATM.renderTrend(el, items, topics, selected, baseDate)` | `js/charts.js` | `#weekly-trend .slot` · … · 선택된 주제 배열 | 주별 꺾은선 |
-| `ATM.renderGrid(el, items, topics)` | `js/grid.js` | `#importance-grid .slot` | 주제 카드 5장, 카드마다 `score` 상위 5건 |
+| `ATM.renderTrend(el, items, topics, selected, baseDate)` | `js/charts.js` | `#weekly-trend .slot` · … · 선택된 주제 배열 | 주별 입력 건수 꺾은선. v1.0: 자료가 3주 미만이면 그리지 않고 안내만 |
+| `ATM.renderGrid(el, items, topics)` | `js/grid.js` | `#importance-grid .slot` | 주제 카드 5장, 카드마다 `score` 상위 5건(v1.0 이름: 규칙 기반 읽기 우선순위) + 기사마다 분류 근거(`why`) |
 | `ATM.renderKeywordTable(el, rank)` | `js/grid.js` | `#keyword-table` · `keywordRanks(...)["7d"]` 같은 값 하나 | 키워드 · 건수 · 증감 표. 탭 전환은 `app.js`가 함 |
 | `ATM.renderUnclassified(el, items)` | `js/grid.js` | `#unclassified .slot` · `topics`가 빈 `items` | 미분류 목록 |
-| `ATM.toCSV(items)` | `js/export.js` | `items` | CSV 문자열. 다시 넣으면 같은 결과가 나와야 함(완료 기준 5) |
+| `ATM.renderEvidence(el, items, topics, filter)` | `js/grid.js` | `#evidence-list` · `items` · 주제 이름 배열 · `"all"` \| `"unclassified"` \| 주제 이름 | (v1.0) 기사별 표: 줄 · 제목 · 붙은 주제마다 실제로 걸린 낱말(`why`). 보인 건수를 돌려줌 |
+| `ATM.toCSV(items)` | `js/export.js` | `items` | CSV 문자열. 다시 넣으면 같은 결과가 나와야 함(완료 기준 5). v1.0: 맨 뒤 `evidence` 칸(주제별 분류 근거) 추가 |
 | `ATM.toMarkdown(items, ranks, stats)` | `js/export.js` | … | 마크다운 문자열 |
 
 파일 저장(다운로드)과 버튼 연결은 `app.js`가 한다.

@@ -25,7 +25,10 @@
       total: items.length,
       classified: items.length - unclassified.length,
       unclassified: unclassified.length,
-      skipped: parsed.skipped
+      skipped: parsed.skipped,
+      firstDate: items.reduce(function (min, it) { return !min || it.date < min ? it.date : min; }, ""),
+      baseDate: baseDate,
+      rulesVersion: RULES.version
     };
     state.ranks = ATM.keywordRanks(items, baseDate);
 
@@ -35,10 +38,20 @@
     ATM.renderGrid($("#importance-grid .slot"), items, topics());
     ATM.renderKeywordTable($("#keyword-table"), state.ranks[state.window]);
     ATM.renderUnclassified($("#unclassified .slot"), unclassified);
+    renderEvidence();
 
     $("#export-csv").disabled = $("#export-md").disabled = items.length === 0;
     status(items.length ? "기준일 " + baseDate + " · " + items.length + "건" : "분류된 결과가 없습니다 (js 1차 구현 전).");
   }
+
+  // (v1.0) 기사별 분류 근거: 보기(전체 · 미분류만 · 주제)를 바꾸면 다시 그림
+  function renderEvidence() {
+    var sel = $("#evidence-filter");
+    if (sel.options.length === 2) topics().forEach(function (t) { sel.add(new Option(t + "만", t)); });
+    var n = ATM.renderEvidence($("#evidence-list"), state.items, topics(), sel.value);
+    $("#evidence-count").textContent = n + " / " + state.items.length + "건";
+  }
+  $("#evidence-filter").addEventListener("change", function () { if (state.items.length) renderEvidence(); });
 
   // 막대를 누르면 그 주제를 추이에 켜고 끈다
   function onSelect(topic) {
@@ -111,5 +124,6 @@
       })
       .catch(function () { useExample("latest.csv 없음"); });
   }
+  $("#rules-version").textContent = window.RULES ? "기준 rules.js " + RULES.version : "";
   autoload();
 })();

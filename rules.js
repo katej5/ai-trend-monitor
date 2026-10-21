@@ -318,7 +318,7 @@ window.RULES = {
       { id: "90d", label: "90일", days: 90 },
       { id: "30d", label: "30일", days: 30 },
       { id: "7d", label: "7일", days: 7 },
-      { id: "1d", label: "전날", days: 1 }
+      { id: "1d", label: "기준일", days: 1 }  // (v1.0) '전날' → '기준일': 실제로 기준일 하루를 센다
     ],
     topN: 10,
     minKo: 2,
