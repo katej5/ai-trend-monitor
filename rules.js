@@ -48,7 +48,7 @@ window.RULES = {
       ko: ["에이전트", "에이전틱", "멀티에이전트", "도구 호출"],
       exclude: ["travel agent", "real estate agent", "secret agent", "free agent", "fbi agent", "insurance agent"]
     },
-    "AI 윤리·안전·거버넌스": {
+    "AI 거버넌스·공공 AI": {
       // 편향·안전성·정렬, 법·규제, 정부·국제기구 가이드라인. 교육 현장의 윤리 교육은 리터러시·교육으로.
       en: ["ai safety", "safety", "ethics", "ethical", "bias", "biased", "alignment", "deepfake", "deepfakes",
            "misinformation", "disinformation", "guardrail", "guardrails", "regulation", "regulations",
