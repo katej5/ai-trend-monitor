@@ -33,6 +33,9 @@
     state.ranks = ATM.keywordRanks(items, baseDate);
 
     ATM.renderSummary(state.stats);
+    // (v1.0) 검산: 요약 숫자를 다른 길로 다시 세어 맞춰 봄. 결과는 마크다운 내보내기에도 넣음
+    state.stats.checks = ATM.selfCheck ? ATM.selfCheck(parsed, items, topics(), state.stats) : [];
+    if (ATM.renderSelfCheck) ATM.renderSelfCheck($("#self-check"), state.stats.checks);
     ATM.renderTopicCounts($("#topic-counts .slot"), items, topics(), onSelect);
     ATM.renderTrend($("#weekly-trend .slot"), items, topics(), state.selected, baseDate);
     ATM.renderGrid($("#importance-grid .slot"), items, topics());

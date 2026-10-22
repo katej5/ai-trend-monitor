@@ -52,6 +52,13 @@ window.ATM = window.ATM || {};
       out.push("- 건너뛴 줄: " + stats.skipped.map(function (s) { return s.line + "번(" + md(s.reason) + ")"; }).join(", "));
     }
 
+    if (stats.checks && stats.checks.length) {
+      var pass = stats.checks.filter(function (c) { return c.ok; }).length;
+      out.push("", "## 검산 " + pass + "/" + stats.checks.length + (pass === stats.checks.length ? " 통과" : " — 확인 필요"), "");
+      stats.checks.forEach(function (c) { out.push("- " + (c.ok ? "✓ " : "✗ ") + md(c.label) + " — " + md(c.detail)); });
+      out.push("", "(같은 결과를 다른 길로 다시 센 자기 점검이며, 분류가 옳은지는 알려 주지 않음)");
+    }
+
     out.push("", "## 주제별 개수", "", "| 주제 | 건수 |", "|---|---:|");
     topics.forEach(function (t) {
       out.push("| " + md(t) + " | " + items.filter(function (it) { return it.topics.indexOf(t) >= 0; }).length + " |");

@@ -208,3 +208,13 @@ button.bar[aria-pressed="true"] { border-color: var(--accent); background: var(-
 @media (max-width: 720px) {
   .evidence th:first-child, .evidence td:first-child { display: none; }
 }
+
+/* v1.0 (중간과제) · 검산 상자 */
+.self-check { margin-top: 10px; font-size: 0.9rem; }
+.self-check summary { cursor: pointer; font-weight: 600; }
+.checks { list-style: none; margin: 6px 0 0; padding: 0; }
+.checks li { padding: 3px 0; overflow-wrap: anywhere; }
+.check-ok { color: #1f7a4d; }
+.check-bad { color: #b03a48; }
+.checks .why { margin-left: 4px; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
