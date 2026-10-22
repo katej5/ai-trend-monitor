@@ -76,7 +76,10 @@ window.ATM = window.ATM || {};
       }).sort(function (a, b) {
         return (b.count - a.count) || (b.prev - a.prev) || (a.keyword < b.keyword ? -1 : a.keyword > b.keyword ? 1 : 0);
       }).slice(0, K.topN);
-      out[w.id] = { window: w.id, label: w.label, days: w.days, rank: rank };
+      // (v1.0) 직전 기간에 실제로 자료가 있는 날 수: 자료가 직전 기간보다 늦게 시작하면 증감 비교가 불완전하다
+      var firstAge = items.reduce(function (m, it) { return Math.max(m, daysBetween(it.date, baseDate)); }, 0);
+      var prevDaysCovered = Math.max(0, Math.min(2 * w.days - 1, firstAge) - w.days + 1);
+      out[w.id] = { window: w.id, label: w.label, days: w.days, rank: rank, prevDaysCovered: prevDaysCovered };
     });
     return out;
   };

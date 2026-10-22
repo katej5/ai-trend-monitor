@@ -9,23 +9,12 @@
 <body>
   <header class="page-head">
     <h1>AI 동향 모니터</h1>
-    <p class="sub">기사·논문 목록(CSV)을 넣으면 <code>rules.js</code> 기준으로 5개 주제로 나눠 보여 줍니다.</p>
+    <p class="sub">넣은 기사·논문 목록(CSV)을 <code>rules.js</code> 기준(규칙만 · 도구 안 AI 호출 없음)으로 5개 주제로 나눈 결과입니다.
+      <strong>넣은 자료의 분포</strong>이며 세계 AI 동향 전체를 뜻하지 않습니다. 기사마다 어떤 낱말로 분류됐는지 근거를 함께 보여 줍니다.</p>
+    <p class="hint"><span id="rules-version"></span> · <a href="#input">자료 넣기·바꾸기 ↓</a></p>
   </header>
 
   <main>
-    <!-- 입력 -->
-    <section id="input" class="panel">
-      <h2>입력</h2>
-      <p class="hint">형식: <code>date,title,url,source</code> · 첫 줄은 머리글</p>
-      <textarea id="csv-input" rows="6" placeholder="date,title,url,source&#10;2026-10-16,(기사 제목),https://...,example.com"></textarea>
-      <div class="actions">
-        <label class="btn">파일 선택<input id="csv-file" type="file" accept=".csv,text/csv" hidden></label>
-        <button id="load-example" type="button" class="btn">예시 불러오기</button>
-        <button id="run" type="button" class="btn primary">분석</button>
-        <span id="input-status" class="status" role="status"></span>
-      </div>
-    </section>
-
     <!-- 1. 요약 숫자 -->
     <section id="summary" class="panel" aria-label="요약 숫자">
       <div class="stats">
@@ -34,7 +23,9 @@
         <div class="stat"><span class="label">미분류</span><span id="stat-unclassified" class="value">–</span></div>
         <div class="stat"><span class="label">건너뛴 줄</span><span id="stat-skipped" class="value">–</span></div>
       </div>
+      <p id="summary-meta" class="hint"></p>
       <p id="skipped-lines" class="hint"></p>
+      <div id="self-check" class="self-check"></div>
     </section>
 
     <div class="row">
@@ -46,14 +37,25 @@
 
       <!-- 3. 주별 추이 -->
       <section id="weekly-trend" class="panel">
-        <h2>주별 추이</h2>
+        <h2>주별 입력 건수</h2>
         <div class="slot" data-owner="B · js/charts.js">주제별 꺾은선 · 주 시작일(월) 기준 · 덜 찬 마지막 주는 점선</div>
       </section>
     </div>
 
-    <!-- 4. 주제별 중요도 순위 그리드 -->
+    <!-- v1.0 · 기사별 분류 근거 -->
+    <section id="evidence" class="panel">
+      <h2>기사별 분류 근거</h2>
+      <div class="actions evidence-filter">
+        <label for="evidence-filter">보기</label>
+        <select id="evidence-filter"><option value="all">전체</option><option value="unclassified">미분류만</option></select>
+        <span id="evidence-count" class="status" role="status"></span>
+      </div>
+      <div id="evidence-list" class="slot" data-owner="B · js/grid.js">기사마다 붙은 주제와 실제로 걸린 낱말(복합 조건이면 조건 이름)</div>
+    </section>
+
+    <!-- 4. 주제별 읽기 우선순위 그리드 -->
     <section id="importance-grid" class="panel">
-      <h2>주제별 중요도 순위</h2>
+      <h2>주제별 읽기 우선순위 <span class="h-note">규칙 기반 · 객관적 중요도 아님</span></h2>
       <div class="slot" data-owner="B · js/grid.js">주제 카드 5장 · 카드마다 상위 5건(날짜·제목·출처·등급·점수) · 등급에 근거 표시</div>
     </section>
 
@@ -64,7 +66,7 @@
         <button type="button" role="tab" data-window="90d" aria-selected="true">90일</button>
         <button type="button" role="tab" data-window="30d" aria-selected="false">30일</button>
         <button type="button" role="tab" data-window="7d" aria-selected="false">7일</button>
-        <button type="button" role="tab" data-window="1d" aria-selected="false">전날</button>
+        <button type="button" role="tab" data-window="1d" aria-selected="false">기준일</button>
       </div>
       <div id="keyword-table" class="slot" data-owner="B · js/grid.js">상위 10개 키워드 · 건수 · 직전 같은 기간 대비 증감</div>
     </section>
@@ -73,6 +75,19 @@
     <section id="unclassified" class="panel">
       <h2>미분류 목록</h2>
       <div class="slot" data-owner="B · js/grid.js">어느 주제에도 안 걸린 기사 → 분류 사전 보강 후보</div>
+    </section>
+
+    <!-- 입력 -->
+    <section id="input" class="panel">
+      <h2>자료 넣기·바꾸기</h2>
+      <p class="hint">형식: <code>date,title,url,source</code> · 첫 줄은 머리글</p>
+      <textarea id="csv-input" rows="6" placeholder="date,title,url,source&#10;2026-10-16,(기사 제목),https://...,example.com"></textarea>
+      <div class="actions">
+        <label class="btn">파일 선택<input id="csv-file" type="file" accept=".csv,text/csv" hidden></label>
+        <button id="load-example" type="button" class="btn">예시 불러오기</button>
+        <button id="run" type="button" class="btn primary">분석</button>
+        <span id="input-status" class="status" role="status"></span>
+      </div>
     </section>
 
     <!-- 내보내기 -->
@@ -101,6 +116,8 @@
   <script src="js/charts.js"></script>
   <script src="js/grid.js"></script>
   <script src="js/export.js"></script>
+  <!-- 검산 (중간과제 v1.0) -->
+  <script src="js/check.js"></script>
   <!-- 연결 (공동) -->
   <script src="js/app.js"></script>
 </body>

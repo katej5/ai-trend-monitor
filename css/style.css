@@ -191,3 +191,30 @@ button.bar[aria-pressed="true"] { border-color: var(--accent); background: var(-
 .unclassified-list { list-style: none; margin: 8px 0 0; padding: 0; font-size: 0.9rem; }
 .unclassified-list li { padding: 5px 0; border-bottom: 1px solid var(--line); overflow-wrap: anywhere; }
 .unclassified-list .when, .unclassified-list .src { color: var(--muted); font-size: 0.8rem; }
+
+/* v1.0 (중간과제) · 분류 근거 · 비교 자료 부족 표시 */
+.h-note { font-size: 0.78rem; font-weight: 500; color: var(--muted); margin-left: 6px; }
+.why { color: var(--muted); font-size: 0.8rem; overflow-wrap: anywhere; }
+.card .why { margin-top: 2px; }
+.warn { color: #8a5200; }
+.evidence-filter { margin: 0 0 10px; }
+.evidence-filter select { font: inherit; padding: 3px 6px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); color: var(--text); }
+.evidence td { vertical-align: top; }
+.tags { list-style: none; margin: 0; padding: 0; }
+.tags li + li { margin-top: 4px; }
+.chip { display: inline-block; padding: 0 6px; border: 1px solid var(--line); border-left-width: 4px; border-radius: 4px; font-size: 0.8rem; white-space: nowrap; }
+.chip.none { border-color: #7a8291; color: var(--muted); }
+#evidence-list.filled { max-height: 560px; overflow: auto; }
+@media (max-width: 720px) {
+  .evidence th:first-child, .evidence td:first-child { display: none; }
+}
+
+/* v1.0 (중간과제) · 검산 상자 */
+.self-check { margin-top: 10px; font-size: 0.9rem; }
+.self-check summary { cursor: pointer; font-weight: 600; }
+.checks { list-style: none; margin: 6px 0 0; padding: 0; }
+.checks li { padding: 3px 0; overflow-wrap: anywhere; }
+.check-ok { color: #1f7a4d; }
+.check-bad { color: #b03a48; }
+.checks .why { margin-left: 4px; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }

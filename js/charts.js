@@ -35,6 +35,14 @@ window.ATM = window.ATM || {};
     set("stat-classified", stats.classified);
     set("stat-unclassified", stats.unclassified);
     set("stat-skipped", stats.skipped.length);
+    // (v1.0) 분모·기간·기준 버전: 비율의 분모는 유효 기사 수(건너뛴 줄 제외)
+    var meta = document.getElementById("summary-meta");
+    if (meta && stats.total) {
+      var pct = function (n) { return (n / stats.total * 100).toFixed(1) + "%"; };
+      meta.textContent = "분류율 " + pct(stats.classified) + " · 미분류율 " + pct(stats.unclassified) + " (분모 = 유효 기사 " + stats.total + "건)" +
+        (stats.firstDate ? " · 자료 날짜 " + stats.firstDate + " ~ " + stats.baseDate + " · 기준일 " + stats.baseDate : "") +
+        (stats.rulesVersion ? " · 기준 rules.js " + stats.rulesVersion : "");
+    } else if (meta) meta.textContent = "";
     document.getElementById("skipped-lines").textContent = stats.skipped.length
       ? "건너뛴 줄: " + stats.skipped.map(function (s) { return s.line + "번(" + s.reason + ")"; }).join(", ")
       : "";
@@ -79,6 +87,11 @@ window.ATM = window.ATM || {};
     var start = monday(utc(first)), end = monday(utc(baseDate));
     var weeks = [];
     for (var t = start; t <= end; t += 7 * DAY) weeks.push(t);
+    // (v1.0) 3주 미만이면 선으로 그리지 않는다: 점 한두 개를 '추이'로 읽지 않게
+    if (weeks.length < 3) {
+      fill(el, '<p class="hint">자료 날짜가 ' + first + " ~ " + baseDate + "(" + weeks.length + "주)뿐이라 주별 그래프를 그리지 않습니다. 3주 이상 자료를 넣으면 그립니다.</p>");
+      return;
+    }
     var partial = weeks.map(function (w) {
       return w < utc(first) || w + 6 * DAY > utc(baseDate); // 데이터가 그 주 월요일보다 늦게 시작 · 일요일 전에 끝남
     });
@@ -103,7 +116,7 @@ window.ATM = window.ATM || {};
     var x = function (i) { return L + (weeks.length === 1 ? (W - L - R) / 2 : i * (W - L - R) / (weeks.length - 1)); };
     var y = function (v) { return T + (H - T - B) * (1 - v / maxY); };
 
-    var svg = '<svg class="trend" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="주별 기사 수 추이">';
+    var svg = '<svg class="trend" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="주별 입력 건수">';
     for (var v = 0; v <= maxY; v += stepY) {
       svg += '<line class="grid" x1="' + L + '" x2="' + (W - R) + '" y1="' + y(v) + '" y2="' + y(v) + '"/>' +
         '<text class="axis" x="' + (L - 6) + '" y="' + (y(v) + 4) + '" text-anchor="end">' + v + "</text>";
@@ -131,7 +144,8 @@ window.ATM = window.ATM || {};
     var legend = '<ul class="legend">' + series.map(function (s) {
       return '<li><span class="swatch" style="background:' + s.color + '"></span>' + esc(s.name) + "</li>";
     }).join("") + '<li class="hint">점선 · 빈 점 = 7일이 다 차지 않은 주</li></ul>';
-    var hint = selected.length ? "" : '<p class="hint">주제별 개수 막대를 누르면 그 주제 선이 함께 표시됩니다.</p>';
+    var hint = '<p class="hint">넣은 자료의 날짜별 건수입니다. 수집한 사람·방식에 따라 달라지므로 세계 AI 동향의 증가·감소로 읽지 않습니다.' +
+      (selected.length ? "" : " 주제별 개수 막대를 누르면 그 주제 선이 함께 표시됩니다.") + "</p>";
     fill(el, svg + legend + hint);
   };
 })();
